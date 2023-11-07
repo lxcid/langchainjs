@@ -85,6 +85,7 @@ export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
+  tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
 }
@@ -99,7 +100,7 @@ export interface StoredGeneration {
   message?: StoredMessage;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system" | "function";
+export type MessageType = "human" | "ai" | "generic" | "system" | "function" | "tool";
 
 export type MessageContent =
   | string
@@ -114,6 +115,7 @@ export interface BaseMessageFields {
   name?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
+    tool_calls?: Array<OpenAIClient.Chat.ChatCompletionMessageToolCall>;
     [key: string]: unknown;
   };
 }
@@ -124,6 +126,10 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
 
 export interface FunctionMessageFieldsWithName extends BaseMessageFields {
   name: string;
+}
+
+export interface ToolMessageFieldsWitToolCallId extends BaseMessageFields {
+  tool_call_id: string;
 }
 
 function mergeContent(
@@ -468,6 +474,40 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 }
 
 /**
+ * Represents a tool message in a conversation.
+ */
+export class ToolMessage extends BaseMessage {
+  static lc_name() {
+    return "ToolMessage";
+  }
+
+  tool_call_id: string;
+
+  constructor(fields: ToolMessageFieldsWitToolCallId);
+
+  constructor(
+    fields: string | BaseMessageFields,
+    tool_call_id: string,
+  );
+
+  constructor(
+    fields: string | ToolMessageFieldsWitToolCallId,
+    tool_call_id?: string,
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, tool_call_id: tool_call_id! };
+    }
+    super(fields);
+    this.tool_call_id = fields.tool_call_id;
+  }
+
+  _getType(): MessageType {
+    return "tool";
+  }
+}
+
+/**
  * Represents a chat message in a conversation.
  */
 export class ChatMessage
@@ -645,6 +685,7 @@ function mapV1MessageToStoredMessage(
         content: v1Message.text,
         role: v1Message.role,
         name: undefined,
+        tool_call_id: undefined,
       },
     };
   }
@@ -666,6 +707,13 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new FunctionMessage(
         storedMessage.data as FunctionMessageFieldsWithName
       );
+    case "tool":
+      if (storedMessage.data.tool_call_id === undefined) {
+        throw new Error("Tool call ID must be defined for tool messages");
+      }
+      return new ToolMessage(
+        storedMessage.data as ToolMessageFieldsWitToolCallId
+      )
     case "chat": {
       if (storedMessage.data.role === undefined) {
         throw new Error("Role must be defined for chat messages");

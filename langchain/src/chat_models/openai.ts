@@ -60,7 +60,8 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     message.role !== "system" &&
     message.role !== "assistant" &&
     message.role !== "user" &&
-    message.role !== "function"
+    message.role !== "function" &&
+    message.role !== "tool"
   ) {
     console.warn(`Unknown message role: ${message.role}`);
   }
@@ -79,6 +80,8 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
       return "user";
     case "function":
       return "function";
+    case "tool":
+      return "tool";
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -112,6 +115,7 @@ function openAIResponseToChatMessage(
     case "assistant":
       return new AIMessage(message.content || "", {
         function_call: message.function_call,
+        tool_calls: message.tool_calls,
       });
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
