@@ -113,6 +113,7 @@ export type MessageContent =
 export interface BaseMessageFields {
   content: MessageContent;
   name?: string;
+  tool_call_id?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
     tool_calls?: Array<OpenAIClient.Chat.ChatCompletionMessageToolCall>;
@@ -179,6 +180,9 @@ export abstract class BaseMessage
 
   /** The name of the message sender in a multi-user chat. */
   name?: string;
+
+  /** The tool call ID */
+  tool_call_id?: string;
 
   /** Additional keyword arguments */
   additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;

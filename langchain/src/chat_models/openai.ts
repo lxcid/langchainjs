@@ -859,7 +859,9 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       } else if (message._getType() === "ai") {
         messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "function") {
-        messageDict = { role: "assistant", content: message.content };
+        messageDict = { role: "function", content: message.content, name: message.name };
+      } else if (message._getType() === 'tool') {
+        messageDict = { role: "tool", content: message.content, tool_call_id: message.tool_call_id };
       } else if (message._getType() === "system") {
         messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
@@ -868,7 +870,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "system"
             | "assistant"
             | "user"
-            | "function",
+            | "function"
+            | "tool",
           content: message.content,
         };
       } else {
