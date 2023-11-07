@@ -861,7 +861,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       } else if (message._getType() === "function") {
         messageDict = { role: "function", content: message.content, name: message.name };
       } else if (message._getType() === 'tool') {
-        messageDict = { role: "tool", content: message.content, tool_call_id: message.tool_call_id };
+        messageDict = { role: "tool", content: message.content, tool_call_id: message.tool_call_id, name: message.name };
       } else if (message._getType() === "system") {
         messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
