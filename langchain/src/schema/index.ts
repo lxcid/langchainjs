@@ -492,15 +492,17 @@ export class ToolMessage extends BaseMessage {
   constructor(
     fields: string | BaseMessageFields,
     tool_call_id: string,
+    name?: string,
   );
 
   constructor(
     fields: string | ToolMessageFieldsWitToolCallId,
     tool_call_id?: string,
+    name?: string,
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
-      fields = { content: fields, tool_call_id: tool_call_id! };
+      fields = { content: fields, name, tool_call_id: tool_call_id! };
     }
     super(fields);
     this.tool_call_id = fields.tool_call_id;
